@@ -1,0 +1,58 @@
+{
+  "nodes": [
+    {
+      "id": "example_features_daily",
+      "type": "feature_table",
+      "entity_key": "entity_id",
+      "candidate_features": ["metric_a", "metric_b", "metric_c", "aggregate_value"]
+    },
+    {
+      "id": "example_labels",
+      "type": "label_table",
+      "entity_key": "entity_id",
+      "candidate_targets": ["target_outcome"]
+    },
+    {
+      "id": "example_entity_master",
+      "type": "entity_master",
+      "entity_key": "entity_id",
+      "attributes": ["category", "region", "created_date"]
+    },
+    {
+      "id": "example_derived_features",
+      "type": "feature_table",
+      "entity_key": "entity_id",
+      "candidate_features": ["computed_metric_x", "computed_metric_y"]
+    }
+  ],
+  "edges": [
+    {
+      "source": "example_features_daily",
+      "target": "example_labels",
+      "relationship": "joinable_on",
+      "key": "entity_id",
+      "confidence": "high"
+    },
+    {
+      "source": "example_entity_master",
+      "target": "example_features_daily",
+      "relationship": "entity_of",
+      "key": "entity_id",
+      "confidence": "high"
+    },
+    {
+      "source": "example_entity_master",
+      "target": "example_labels",
+      "relationship": "entity_of",
+      "key": "entity_id",
+      "confidence": "high"
+    },
+    {
+      "source": "example_derived_features",
+      "target": "example_labels",
+      "relationship": "joinable_on",
+      "key": "entity_id",
+      "confidence": "medium"
+    }
+  ]
+}
