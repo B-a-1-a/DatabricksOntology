@@ -19,19 +19,19 @@ from pathlib import Path
 def backup_current_graph():
     """Backup current graph with timestamp"""
     if not Path('ontology_graph.json').exists():
-        print("⚠️  No existing graph to backup")
+        print("[WARN] No existing graph to backup")
         return None
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup_name = f"ontology_graph_backup_{timestamp}.json"
 
     shutil.copy('ontology_graph.json', backup_name)
-    print(f"✅ Backed up current graph to: {backup_name}")
+    print(f"[SUCCESS] Backed up current graph to: {backup_name}")
     return backup_name
 
 def validate_graph_schema(filepath):
     """Validate graph has expected schema"""
-    print(f"🔍 Validating schema of: {filepath}")
+    print(f"[INFO] Validating schema of: {filepath}")
 
     try:
         with open(filepath, 'r') as f:
@@ -75,7 +75,7 @@ def validate_graph_schema(filepath):
         if edge['target'] not in node_ids:
             raise ValueError(f"Edge {idx} target '{edge['target']}' not in nodes")
 
-    print(f"✅ Schema validated successfully")
+    print(f"[SUCCESS] Schema validated successfully")
     return graph
 
 def show_graph_summary(graph):
@@ -119,26 +119,26 @@ def swap_graph(new_graph_path):
 
     # Validate new graph exists
     if not new_graph_path.exists():
-        print(f"❌ File not found: {new_graph_path}")
+        print(f"[FAIL] File not found: {new_graph_path}")
         return False
 
-    print(f"📥 Loading new graph from: {new_graph_path}")
+    print(f"[INFO] Loading new graph from: {new_graph_path}")
 
     # Validate schema
     try:
         new_graph = validate_graph_schema(new_graph_path)
     except Exception as e:
-        print(f"❌ Schema validation failed: {e}")
+        print(f"[FAIL] Schema validation failed: {e}")
         return False
 
     # Show what we're about to install
     show_graph_summary(new_graph)
 
     # Confirm swap
-    print("⚠️  This will replace the current ontology_graph.json")
+    print("[WARN] This will replace the current ontology_graph.json")
     response = input("Continue? [y/N]: ")
     if response.lower() not in ['y', 'yes']:
-        print("❌ Swap cancelled")
+        print("[FAIL] Swap cancelled")
         return False
 
     # Backup current graph
@@ -146,7 +146,7 @@ def swap_graph(new_graph_path):
 
     # Install new graph
     shutil.copy(new_graph_path, 'ontology_graph.json')
-    print(f"✅ New graph installed: ontology_graph.json")
+    print(f"[SUCCESS] New graph installed: ontology_graph.json")
 
     # Next steps
     print("\n" + "=" * 60)
@@ -192,10 +192,10 @@ def main():
     success = swap_graph(new_graph_path)
 
     if success:
-        print("\n✅ Graph swap completed successfully!")
+        print("\n[SUCCESS] Graph swap completed successfully!")
         sys.exit(0)
     else:
-        print("\n❌ Graph swap failed")
+        print("\n[FAIL] Graph swap failed")
         sys.exit(1)
 
 if __name__ == "__main__":

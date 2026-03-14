@@ -19,7 +19,7 @@ from streamlit_agraph import agraph, Node, Edge, Config
 
 st.set_page_config(
     page_title="Databricks Ontology Copilot",
-    page_icon="📊",
+    page_icon="chart_with_upwards_trend",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -267,7 +267,7 @@ def get_api_client():
             api_key=nvidia_key,
             base_url="https://integrate.api.nvidia.com/v1"
         )
-        return client, "meta/llama-3.1-405b-instruct", "nvidia"
+        return client, "nvidia/nemotron-3-super-120b-a12b", "nvidia"
 
     # Fall back to OpenAI
     openai_key = os.getenv('OPENAI_API_KEY')
@@ -379,7 +379,7 @@ with col2:
     )
 
 # Example questions
-with st.expander("💡 Example questions"):
+with st.expander("Example questions"):
     st.markdown("""
     **Try asking:**
     - What data should I use to predict target_outcome?

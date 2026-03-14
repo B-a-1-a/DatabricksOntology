@@ -14,11 +14,11 @@ def test_api_connection():
     # Check for API key
     api_key = os.getenv('OPENAI_API_KEY')
     if not api_key:
-        print("❌ OPENAI_API_KEY environment variable not set")
+        print("[ERROR] OPENAI_API_KEY environment variable not set")
         print("   Run: export OPENAI_API_KEY='sk-...'")
         return False
 
-    print(f"✓ API key found: {api_key[:10]}...")
+    print(f"[INFO] API key found: {api_key[:10]}...")
 
     try:
         client = OpenAI()
@@ -29,10 +29,10 @@ def test_api_connection():
             max_tokens=50
         )
         result = json.loads(response.choices[0].message.content)
-        print(f"✓ API test passed: {result}")
+        print(f"[INFO] API test passed: {result}")
         return True
     except Exception as e:
-        print(f"❌ API test failed: {e}")
+        print(f"[ERROR] API test failed: {e}")
         return False
 
 def test_ontology_query():
@@ -43,9 +43,9 @@ def test_ontology_query():
     try:
         with open('ontology_graph.json', 'r') as f:
             graph = json.load(f)
-        print(f"✓ Loaded graph with {len(graph['nodes'])} nodes and {len(graph['edges'])} edges")
+        print(f"[INFO] Loaded graph with {len(graph['nodes'])} nodes and {len(graph['edges'])} edges")
     except Exception as e:
-        print(f"❌ Failed to load graph: {e}")
+        print(f"[ERROR] Failed to load graph: {e}")
         return False
 
     # Test query
@@ -77,19 +77,19 @@ Only recommend tables and columns that exist in the graph JSON. Never invent ass
         )
 
         result = json.loads(response.choices[0].message.content)
-        print("\n✓ Agent response:")
+        print("\n[INFO] Agent response:")
         print(json.dumps(result, indent=2))
 
         # Validate response structure
         if 'target' in result and 'features' in result and 'gaps' in result:
-            print("\n✓ Response has correct structure")
+            print("\n[INFO] Response has correct structure")
             return True
         else:
-            print("\n❌ Response missing required fields")
+            print("\n[ERROR] Response missing required fields")
             return False
 
     except Exception as e:
-        print(f"❌ Query failed: {e}")
+        print(f"[ERROR] Query failed: {e}")
         return False
 
 if __name__ == "__main__":
@@ -104,13 +104,13 @@ if __name__ == "__main__":
 
         if query_ok:
             print("\n" + "=" * 60)
-            print("✅ ALL TESTS PASSED - Ready to build Streamlit app")
+            print("[SUCCESS] ALL TESTS PASSED - Ready to build Streamlit app")
             print("=" * 60)
         else:
             print("\n" + "=" * 60)
-            print("⚠️  API works but query logic needs adjustment")
+            print("[WARN] API works but query logic needs adjustment")
             print("=" * 60)
     else:
         print("\n" + "=" * 60)
-        print("❌ Fix API key before proceeding")
+        print("[ERROR] Fix API key before proceeding")
         print("=" * 60)

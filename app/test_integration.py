@@ -19,16 +19,16 @@ def test_graph_load():
         assert 'edges' in graph, "Graph missing 'edges' field"
         assert len(graph['nodes']) > 0, "Graph has no nodes"
 
-        print(f"  ✅ Graph loaded: {len(graph['nodes'])} nodes, {len(graph['edges'])} edges")
+        print(f"  [PASS] Graph loaded: {len(graph['nodes'])} nodes, {len(graph['edges'])} edges")
         return True
     except FileNotFoundError:
-        print("  ❌ ontology_graph.json not found")
+        print("  [FAIL] ontology_graph.json not found")
         return False
     except json.JSONDecodeError as e:
-        print(f"  ❌ Invalid JSON: {e}")
+        print(f"  [FAIL] Invalid JSON: {e}")
         return False
     except AssertionError as e:
-        print(f"  ❌ {e}")
+        print(f"  [FAIL] {e}")
         return False
 
 def test_graph_schema():
@@ -59,15 +59,15 @@ def test_graph_schema():
             assert edge['source'] in node_ids, f"Edge {idx} source '{edge['source']}' not in nodes"
             assert edge['target'] in node_ids, f"Edge {idx} target '{edge['target']}' not in nodes"
 
-        print(f"  ✅ Schema valid")
+        print(f"  [PASS] Schema valid")
         print(f"     Node types: {set(n['type'] for n in graph['nodes'])}")
         print(f"     Confidence levels: {set(e['confidence'] for e in graph['edges'])}")
         return True
     except AssertionError as e:
-        print(f"  ❌ {e}")
+        print(f"  [FAIL] {e}")
         return False
     except Exception as e:
-        print(f"  ❌ Unexpected error: {e}")
+        print(f"  [FAIL] Unexpected error: {e}")
         return False
 
 def test_api_key_set():
@@ -75,10 +75,10 @@ def test_api_key_set():
     print("Testing API key configuration...")
     api_key = os.getenv('OPENAI_API_KEY')
     if api_key:
-        print(f"  ✅ API key set: {api_key[:10]}...")
+        print(f"  [PASS] API key set: {api_key[:10]}...")
         return True
     else:
-        print("  ⚠️  API key not set (export OPENAI_API_KEY='sk-...')")
+        print("  [WARN] API key not set (export OPENAI_API_KEY='sk-...')")
         return False
 
 def test_api_integration():
@@ -108,10 +108,10 @@ def test_api_integration():
 
         result = json.loads(response.choices[0].message.content)
         assert isinstance(result, dict), "API response is not a dict"
-        print(f"  ✅ API responds correctly")
+        print(f"  [PASS] API responds correctly")
         return True
     except Exception as e:
-        print(f"  ❌ API error: {e}")
+        print(f"  [FAIL] API error: {e}")
         return False
 
 def test_agent_query():
@@ -157,12 +157,12 @@ Only recommend tables and columns that exist in the graph.'''
         assert 'features' in result, "Response missing 'features'"
         assert 'gaps' in result, "Response missing 'gaps'"
 
-        print(f"  ✅ Agent query works")
+        print(f"  [PASS] Agent query works")
         print(f"     Target: {result['target'].get('table', 'N/A')}.{result['target'].get('column', 'N/A')}")
         print(f"     Features: {len(result['features'])} recommendations")
         return True
     except Exception as e:
-        print(f"  ❌ Agent query error: {e}")
+        print(f"  [FAIL] Agent query error: {e}")
         return False
 
 def test_no_hallucinations():
@@ -216,13 +216,13 @@ CRITICAL: Only recommend tables and columns that exist in the graph JSON. Never 
                     feat_table = feat['table']
                     assert feat_table in valid_tables, f"Hallucinated feature table: {feat_table}"
 
-        print(f"  ✅ No hallucinations detected")
+        print(f"  [PASS] No hallucinations detected")
         return True
     except AssertionError as e:
-        print(f"  ❌ {e}")
+        print(f"  [FAIL] {e}")
         return False
     except Exception as e:
-        print(f"  ❌ Error: {e}")
+        print(f"  [FAIL] Error: {e}")
         return False
 
 def test_streamlit_imports():
@@ -234,12 +234,12 @@ def test_streamlit_imports():
         from streamlit_agraph import agraph, Node, Edge, Config
         import networkx
 
-        print(f"  ✅ All packages importable")
+        print(f"  [PASS] All packages importable")
         print(f"     streamlit: {streamlit.__version__}")
         print(f"     openai: {openai.__version__}")
         return True
     except ImportError as e:
-        print(f"  ❌ Import error: {e}")
+        print(f"  [FAIL] Import error: {e}")
         print("     Run: pip install streamlit streamlit-agraph networkx openai")
         return False
 
@@ -275,11 +275,11 @@ def main():
 
     for test_name, result in results.items():
         if result is True:
-            print(f"✅ {test_name}")
+            print(f"  [PASS] {test_name}")
         elif result is False:
-            print(f"❌ {test_name}")
+            print(f"  [FAIL] {test_name}")
         else:
-            print(f"⏭️  {test_name} (skipped)")
+            print(f"  [SKIP] {test_name} (skipped)")
 
     print()
     print(f"Passed: {passed} | Failed: {failed} | Skipped: {skipped}")
@@ -290,16 +290,16 @@ def main():
 
     if critical_passed and failed == 0:
         print()
-        print("✅ ALL TESTS PASSED - Ready for production!")
+        print("[SUCCESS] ALL TESTS PASSED - Ready for production!")
         return 0
     elif critical_passed:
         print()
-        print("⚠️  CORE TESTS PASSED - Ready for demo (API tests skipped)")
+        print("[WARN] CORE TESTS PASSED - Ready for demo (API tests skipped)")
         print("   Set OPENAI_API_KEY to run full test suite")
         return 0
     else:
         print()
-        print("❌ CRITICAL TESTS FAILED - Fix before demo")
+        print("[FAIL] CRITICAL TESTS FAILED - Fix before demo")
         return 1
 
 if __name__ == "__main__":

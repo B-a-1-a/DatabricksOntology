@@ -14,7 +14,7 @@
 
 #### Multi-Provider API Support
 - **NVIDIA NIM integration** via OpenAI-compatible API
-  - Model: meta/llama-3.1-405b-instruct
+  - Model: nvidia/nemotron-3-super-120b-a12b
   - Environment variable: NVIDIA_API_KEY
   - Automatic provider detection with priority fallback
   - Conditional parameters (OpenAI gets response_format, NVIDIA does not)

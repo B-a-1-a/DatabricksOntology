@@ -149,7 +149,7 @@ temperature=0.0             # Deterministic outputs
 response_format={'type': 'json_object'}  # Guaranteed valid JSON (OpenAI only)
 
 # NVIDIA NIM
-model='meta/llama-3.1-405b-instruct'
+model='nvidia/nemotron-3-super-120b-a12b'
 base_url='https://integrate.api.nvidia.com/v1'
 temperature=0.0
 # Note: NVIDIA NIM doesn't support response_format parameter
@@ -163,7 +163,7 @@ temperature=0.0
    - Features: JSON mode, function calling
 
 2. **NVIDIA NIM** (OpenAI-compatible)
-   - Model: `meta/llama-3.1-405b-instruct`
+   - Model: `nvidia/nemotron-3-super-120b-a12b`
    - API Key: `NVIDIA_API_KEY`
    - Base URL: `https://integrate.api.nvidia.com/v1`
    - Features: OpenAI-compatible API format
