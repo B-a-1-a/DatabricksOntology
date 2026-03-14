@@ -10,6 +10,7 @@ Supports OpenAI GPT-4o and NVIDIA NIM API endpoints.
 import streamlit as st
 import json
 import os
+from pathlib import Path
 from openai import OpenAI
 from streamlit_agraph import agraph, Node, Edge, Config
 
@@ -19,10 +20,23 @@ from streamlit_agraph import agraph, Node, Edge, Config
 
 st.set_page_config(
     page_title="Databricks Ontology Copilot",
-    page_icon="chart_with_upwards_trend",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# App constants
+APP_DIR = Path(__file__).resolve().parent
+
+# Stable session-state defaults for predictable reruns
+if "selected_node" not in st.session_state:
+    st.session_state["selected_node"] = None
+if "last_result" not in st.session_state:
+    st.session_state["last_result"] = None
+if "last_question" not in st.session_state:
+    st.session_state["last_question"] = ""
+if "demo_mode" not in st.session_state:
+    st.session_state["demo_mode"] = False
 
 # ============================================
 # CUSTOM CSS STYLING
@@ -30,19 +44,34 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+    :root {
+        --brand-primary: #FF3621;
+        --brand-accent: #FF8A1F;
+        --brand-ink: #1B3139;
+        --brand-muted: #6C757D;
+    }
+
+    /* Keep content centered and readable on large screens */
+    .block-container {
+        max-width: 1180px;
+        margin-left: auto;
+        margin-right: auto;
+        padding-top: 1rem;
+    }
+
     /* Main title styling */
     .main h1 {
-        color: #FF3621;
+        color: var(--brand-primary);
         font-weight: 700;
         padding-bottom: 0.5rem;
     }
 
     /* Section headers */
     .main h2 {
-        color: #1B3139;
+        color: var(--brand-ink);
         font-weight: 600;
         padding-top: 1rem;
-        border-bottom: 2px solid #FF3621;
+        border-bottom: 2px solid var(--brand-primary);
         padding-bottom: 0.5rem;
     }
 
@@ -50,13 +79,13 @@ st.markdown("""
     [data-testid="stMetricValue"] {
         font-size: 1.8rem;
         font-weight: 600;
-        color: #1B3139;
+        color: var(--brand-ink);
     }
 
     /* Info boxes */
     .stAlert {
         border-radius: 8px;
-        border-left: 4px solid #FF3621;
+        border-left: 4px solid var(--brand-primary);
     }
 
     /* Buttons */
@@ -64,11 +93,16 @@ st.markdown("""
         border-radius: 6px;
         font-weight: 600;
         transition: all 0.3s ease;
+        background-color: var(--brand-primary);
+        border: 1px solid var(--brand-primary);
+        color: #FFFFFF;
     }
 
     .stButton>button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(255, 54, 33, 0.3);
+        background-color: #E22E1C;
+        border: 1px solid #E22E1C;
+        box-shadow: 0 4px 12px rgba(255, 54, 33, 0.35);
     }
 
     /* Code blocks */
@@ -85,8 +119,8 @@ st.markdown("""
     }
 
     .stTextInput>div>div>input:focus {
-        border-color: #FF3621;
-        box-shadow: 0 0 0 1px #FF3621;
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 1px var(--brand-primary);
     }
 
     /* Expanders */
@@ -119,8 +153,30 @@ st.markdown("""
     .footer {
         text-align: center;
         padding: 1rem;
-        color: #6C757D;
+        color: var(--brand-muted);
         font-size: 0.875rem;
+    }
+
+    .app-title {
+        color: var(--brand-ink);
+        font-weight: 750;
+        text-align: center;
+        margin: 0.1rem 0 0.2rem 0;
+    }
+
+    .app-subtitle {
+        color: var(--brand-muted);
+        text-align: center;
+        font-style: italic;
+        margin-top: 0;
+        margin-bottom: 1.25rem;
+    }
+
+    .app-logo-wrap {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 0.35rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -132,22 +188,71 @@ st.markdown("""
 @st.cache_data
 def load_graph_data():
     """Load the ontology graph from JSON file"""
+    graph_path = APP_DIR / "ontology_graph.json"
     try:
-        with open('ontology_graph.json', 'r') as f:
+        with open(graph_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
-        st.error("Error: ontology_graph.json not found. Make sure it exists in the app directory.")
+        st.error(f"Error: ontology_graph.json not found at `{graph_path}`.")
         return None
     except json.JSONDecodeError as e:
         st.error(f"Error: Invalid JSON in ontology_graph.json: {e}")
         return None
 
+# Optional logo support (safe if files are absent)
+def get_logo_path():
+    """Return first available logo path, else None."""
+    # Support both app directory and project root naming conventions.
+    candidates = [
+        APP_DIR.parent / "linqr-logo-dark",
+        APP_DIR.parent / "linqr-logo-dark.png",
+        APP_DIR.parent / "linqr-logo-dark.jpg",
+        APP_DIR.parent / "linqr-logo-dark.jpeg",
+        APP_DIR.parent / "linqr-logo-dark.webp",
+        APP_DIR.parent / "linqr-logo",
+        APP_DIR.parent / "linqr-logo-dark",
+        APP_DIR.parent / "linqr-logo.png",
+        APP_DIR.parent / "linqr-logo-dark.png",
+        APP_DIR.parent / "linqr-logo.jpg",
+        APP_DIR.parent / "linqr-logo-dark.jpg",
+        APP_DIR.parent / "linqr-logo.jpeg",
+        APP_DIR.parent / "linqr-logo-dark.jpeg",
+        APP_DIR.parent / "linqr-logo.webp",
+        APP_DIR.parent / "linqr-logo-dark.webp",
+        APP_DIR / "assets" / "linqr-logo-light.png",
+        APP_DIR / "assets" / "linqr-logo-dark.png",
+        APP_DIR / "assets" / "logo-light.png",
+        APP_DIR / "assets" / "logo-dark.png",
+        APP_DIR / "assets" / "logo.png",
+        APP_DIR / "linqr-logo-light.png",
+        APP_DIR / "linqr-logo-dark.png",
+        APP_DIR / "logo.png",
+        APP_DIR.parent.parent / "linqr-logo-dark",
+        APP_DIR.parent.parent / "linqr-logo-dark.png",
+        APP_DIR.parent.parent / "linqr-logo",
+        APP_DIR.parent.parent / "linqr-logo.png",
+    ]
+    for path in candidates:
+        if path.exists():
+            return path
+    return None
+
 # ============================================
 # GRAPH VISUALIZATION
 # ============================================
 
-st.title("Databricks Ontology Copilot")
-st.markdown("*AI-powered data discovery for ML projects*")
+logo_path = get_logo_path()
+if logo_path:
+    center_col = st.columns([1, 6, 1])[1]
+    with center_col:
+        st.markdown('<div class="app-logo-wrap">', unsafe_allow_html=True)
+        st.image(str(logo_path), width=240)
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<h1 class="app-title">Databricks Ontology Copilot</h1>', unsafe_allow_html=True)
+        st.markdown('<p class="app-subtitle">AI-powered data discovery for ML projects</p>', unsafe_allow_html=True)
+else:
+    st.markdown('<h1 class="app-title">Databricks Ontology Copilot</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="app-subtitle">AI-powered data discovery for ML projects</p>', unsafe_allow_html=True)
 
 # Load graph data
 graph_data = load_graph_data()
@@ -155,13 +260,37 @@ graph_data = load_graph_data()
 if graph_data:
     st.header("Data Ontology Graph")
 
+    # Lightweight clutter controls to keep large/messy graphs readable in demos.
+    with st.expander("Graph Display Controls", expanded=False):
+        anti_overlap_mode = st.checkbox(
+            "Use anti-overlap hierarchical layout",
+            value=True,
+            help="Recommended for larger graphs or noisy test data"
+        )
+        hierarchy_direction = st.selectbox(
+            "Hierarchy direction",
+            options=["LR", "UD"],
+            index=0,
+            help="LR = left-to-right, UD = top-to-bottom"
+        )
+        show_edge_labels = st.checkbox(
+            "Show edge key labels",
+            value=False,
+            help="Turn off labels to reduce visual knotting"
+        )
+        show_nav_controls = st.checkbox(
+            "Show on-canvas navigation controls",
+            value=False,
+            help="Disable to avoid control clipping and reduce visual noise"
+        )
+
     # Color legend
     st.markdown("""
     **Node Types:**
-    - **Blue:** Feature Table
+    - **Orange:** Feature Table
     - **Red:** Label Table
-    - **Green:** Entity Master
-    - **Gray:** Lookup
+    - **Amber:** Entity Master
+    - **Gray:** Lookup / Other
     """)
 
     # Build agraph nodes and edges
@@ -170,9 +299,9 @@ if graph_data:
 
     # Color mapping for node types
     color_map = {
-        'feature_table': '#4A90D9',  # Blue
+        'feature_table': '#FF8A1F',  # Orange
         'label_table': '#E24B4A',     # Red
-        'entity_master': '#1D9E75',   # Green
+        'entity_master': '#F2A93B',   # Amber
         'lookup': '#888780'           # Gray
     }
 
@@ -182,7 +311,7 @@ if graph_data:
         nodes.append(Node(
             id=node_data['id'],
             label=node_data['id'],
-            size=400,
+            size=28,
             color=color_map.get(node_type, '#888780'),
             font={'size': 14, 'color': '#FFFFFF'},
             shape='box'
@@ -190,31 +319,66 @@ if graph_data:
 
     # Create edges
     for edge_data in graph_data.get('edges', []):
-        # Use dashed for medium confidence, solid for high
-        edge_style = 'dashed' if edge_data.get('confidence') == 'medium' else 'solid'
+        confidence = edge_data.get('confidence', 'high')
+        dashed = confidence in ('medium', 'low')
+        edge_color = '#9A9A9A'
+        if confidence == 'high':
+            edge_color = '#FF8A1F'
+        elif confidence == 'medium':
+            edge_color = '#C58B4D'
 
         edges.append(Edge(
             source=edge_data['source'],
             target=edge_data['target'],
-            label=edge_data.get('key', ''),
-            color='#848484',
-            dashes=True if edge_style == 'dashed' else False,
+            label=edge_data.get('key', '') if show_edge_labels else '',
+            color=edge_color,
+            dashes=dashed,
             font={'size': 10, 'align': 'middle'}
         ))
 
     # Configure graph visualization
-    config = Config(
-        width=900,
-        height=600,
+    config_kwargs = dict(
+        width=940,
+        height=540,
         directed=True,
-        physics=True,
-        hierarchical=False,
+        physics=not anti_overlap_mode,
+        hierarchical=anti_overlap_mode,
         nodeHighlightBehavior=True,
-        highlightColor="#F7A7A6",
+        highlightColor="#FFD2A6",
         collapsible=False,
+        layout={"improvedLayout": True, "randomSeed": 42},
         node={'labelProperty': 'label'},
-        link={'labelProperty': 'label', 'renderLabel': True}
+        link={'labelProperty': 'label', 'renderLabel': show_edge_labels}
     )
+    if anti_overlap_mode:
+        config_kwargs["layout"] = {
+            "improvedLayout": True,
+            "randomSeed": 42,
+            "hierarchical": {
+                "enabled": True,
+                "direction": hierarchy_direction,
+                "sortMethod": "directed",
+                "nodeSpacing": 220,
+                "levelSeparation": 220,
+                "treeSpacing": 260
+            }
+        }
+        config_kwargs["physics"] = False
+        config_kwargs["hierarchical"] = True
+
+    # Best-effort interaction tuning for less aggressive zooming.
+    config_kwargs["interaction"] = {
+        "zoomSpeed": 0.35,
+        "navigationButtons": show_nav_controls,
+        "zoomView": True,
+        "dragView": True
+    }
+    try:
+        config = Config(**config_kwargs)
+    except TypeError:
+        # Some streamlit-agraph versions may reject interaction.
+        config_kwargs.pop("interaction", None)
+        config = Config(**config_kwargs)
 
     # Render graph
     selected_node = agraph(nodes=nodes, edges=edges, config=config)
@@ -222,7 +386,9 @@ if graph_data:
     # Store selected node in session state
     if selected_node:
         st.session_state['selected_node'] = selected_node
-        st.info(f"Selected node: **{selected_node}**")
+
+    if st.session_state.get('selected_node'):
+        st.info(f"Selected node: **{st.session_state['selected_node']}**")
 
     # Graph statistics
     col1, col2, col3 = st.columns(3)
@@ -267,7 +433,7 @@ def get_api_client():
             api_key=nvidia_key,
             base_url="https://integrate.api.nvidia.com/v1"
         )
-        return client, "nvidia/nemotron-3-super-120b-a12b", "nvidia"
+        return client, "meta/llama-3.1-405b-instruct", "nvidia"
 
     # Fall back to OpenAI
     openai_key = os.getenv('OPENAI_API_KEY')
@@ -319,8 +485,20 @@ Only recommend tables and columns that exist in the graph JSON. Never invent ass
         call_params['response_format'] = {'type': 'json_object'}
 
     response = client.chat.completions.create(**call_params)
+    message_content = ""
+    if response.choices and response.choices[0].message:
+        message_content = response.choices[0].message.content or ""
 
-    return json.loads(response.choices[0].message.content)
+    try:
+        parsed = json.loads(message_content)
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            "Model response was not valid JSON. Try again or enable demo mode."
+        ) from exc
+
+    if not isinstance(parsed, dict):
+        raise ValueError("Unexpected model response shape. Expected a JSON object.")
+    return parsed
 
 
 # Check if API key is set
@@ -343,7 +521,7 @@ if not api_key_set:
     export NVIDIA_API_KEY='nvapi-...'
     ```
 
-    Then restart the Streamlit app.
+    Or enable **Demo Controls** below to use a cached response without API keys.
     """)
 else:
     st.info(f"Using **{api_provider}** API")
@@ -352,7 +530,7 @@ else:
 with st.expander("Demo Controls"):
     demo_mode = st.checkbox(
         "Use cached demo response (fallback if API fails)",
-        value=False,
+        key="demo_mode",
         help="Enable this if the API is down or you want to show a pre-cached result"
     )
     if demo_mode:
@@ -365,7 +543,7 @@ with col1:
     user_question = st.text_input(
         "What do you want to predict?",
         placeholder="e.g., What data should I use to predict customer churn?",
-        disabled=not api_key_set or graph_data is None,
+        disabled=(not api_key_set and not demo_mode) or graph_data is None,
         key="query_input"
     )
 
@@ -379,7 +557,7 @@ with col2:
     )
 
 # Example questions
-with st.expander("Example questions"):
+with st.expander("💡 Example questions"):
     st.markdown("""
     **Try asking:**
     - What data should I use to predict target_outcome?
@@ -440,7 +618,7 @@ if query_button:
                 result = None
 
 # Display results if available
-if 'last_result' in st.session_state:
+if st.session_state.get('last_result'):
     result = st.session_state['last_result']
 
     st.markdown("---")
@@ -458,9 +636,9 @@ if 'last_result' in st.session_state:
 
         # Confidence color mapping
         confidence_icons = {
-            'high': '',
-            'medium': '',
-            'low': ''
+            'high': '🟢',
+            'medium': '🟡',
+            'low': '🔴'
         }
 
         for idx, feat in enumerate(result['features'], 1):
@@ -514,7 +692,7 @@ LIMIT 1000;"""
         st.warning(f"**Warning: Data Gaps & Limitations:**\n\n{result['gaps']}")
 
     # Display query for reference
-    if 'last_question' in st.session_state:
+    if st.session_state.get('last_question'):
         st.caption(f"_Query: \"{st.session_state['last_question']}\"_")
 
 # Empty state when no results
@@ -541,7 +719,7 @@ with col_status2:
 with col_status3:
     if demo_mode:
         st.info("Demo mode active")
-    elif 'last_result' in st.session_state:
+    elif st.session_state.get('last_result'):
         st.success("Success: Results cached")
     else:
         st.info("Ready for query")
