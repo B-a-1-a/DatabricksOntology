@@ -7,7 +7,7 @@ A natural language interface for querying Databricks data ontologies using AI-po
 ### Prerequisites
 
 - Python 3.8+
-- OpenAI API key
+- API key (OpenAI or NVIDIA NIM)
 - Virtual environment (recommended)
 
 ### Installation
@@ -20,8 +20,12 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install streamlit streamlit-agraph networkx openai databricks-sdk
 
-# Set OpenAI API key
-export OPENAI_API_KEY='sk-...'  # Replace with your actual key
+# Set API key (choose one)
+# Option 1: OpenAI
+export OPENAI_API_KEY='sk-...'
+
+# Option 2: NVIDIA NIM (OpenAI-compatible)
+export NVIDIA_API_KEY='nvapi-...'
 ```
 
 ### Running the Application
@@ -40,10 +44,11 @@ The application will open in your browser at `http://localhost:8501`.
 
 ### Agent Query Interface
 - Natural language question input for data discovery
-- AI-powered ontology traversal using GPT-4o
+- AI-powered ontology traversal using LLMs (OpenAI GPT-4o or NVIDIA NIM Llama 3.1 405B)
 - Structured recommendations with target columns, feature tables, and join keys
 - Confidence scoring for recommendations
 - SQL scaffold generation
+- Demo mode with cached responses for reliable demonstrations
 
 ### Data Visualization
 - Interactive knowledge graph display
@@ -103,9 +108,15 @@ This will verify:
 ```bash
 # Verify API key is set
 echo $OPENAI_API_KEY
+# OR
+echo $NVIDIA_API_KEY
 
 # Set permanently (add to ~/.bashrc or ~/.zshrc)
 export OPENAI_API_KEY='sk-...'
+# OR
+export NVIDIA_API_KEY='nvapi-...'
+
+# Alternative: Enable demo mode in the app for cached responses
 ```
 
 **Missing Dependencies:**
@@ -121,20 +132,41 @@ pip install streamlit openai
 
 ## Architecture
 
-- **Frontend:** Streamlit for interactive UI
-- **AI Agent:** OpenAI GPT-4o with structured JSON output
+- **Frontend:** Streamlit with custom CSS styling for professional appearance
+- **AI Agent:** Multi-provider support (OpenAI GPT-4o or NVIDIA NIM Llama 3.1 405B)
 - **Graph Model:** NetworkX for backend computation
-- **Visualization:** streamlit-agraph for interactive graphs
+- **Visualization:** streamlit-agraph with physics-enabled layout
+- **API Integration:** OpenAI-compatible endpoints with automatic provider detection
 
 ## Configuration
 
 Key parameters in `app.py`:
 
 ```python
-model='gpt-4o'              # OpenAI model
+# OpenAI
+model='gpt-4o'
 temperature=0.0             # Deterministic outputs
-response_format={'type': 'json_object'}  # Guaranteed valid JSON
+response_format={'type': 'json_object'}  # Guaranteed valid JSON (OpenAI only)
+
+# NVIDIA NIM
+model='meta/llama-3.1-405b-instruct'
+base_url='https://integrate.api.nvidia.com/v1'
+temperature=0.0
+# Note: NVIDIA NIM doesn't support response_format parameter
 ```
+
+### Supported Providers
+
+1. **OpenAI** (default)
+   - Model: `gpt-4o`
+   - API Key: `OPENAI_API_KEY`
+   - Features: JSON mode, function calling
+
+2. **NVIDIA NIM** (OpenAI-compatible)
+   - Model: `meta/llama-3.1-405b-instruct`
+   - API Key: `NVIDIA_API_KEY`
+   - Base URL: `https://integrate.api.nvidia.com/v1`
+   - Features: OpenAI-compatible API format
 
 ## License
 

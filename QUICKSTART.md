@@ -10,7 +10,11 @@ cd ~/DatabricksOntology/app
 source ../venv/bin/activate
 
 # 3. Set API key (optional - demo mode works without it)
-export OPENAI_API_KEY='sk-...'  # Replace with your key
+# Option 1: OpenAI
+export OPENAI_API_KEY='sk-...'
+
+# Option 2: NVIDIA NIM (OpenAI-compatible)
+export NVIDIA_API_KEY='nvapi-...'
 
 # 4. Test setup
 python test_integration.py
@@ -65,8 +69,13 @@ pip install -r requirements.txt
 
 **"API key not set"**
 ```bash
+# Option 1: OpenAI
 export OPENAI_API_KEY='sk-...'
 # Verify: echo $OPENAI_API_KEY
+
+# Option 2: NVIDIA NIM (OpenAI-compatible)
+export NVIDIA_API_KEY='nvapi-...'
+# Verify: echo $NVIDIA_API_KEY
 
 # Alternative: Use demo mode in the app (cached responses)
 ```
@@ -102,10 +111,11 @@ python test_agent.py
 
 ## Architecture
 
-- **Frontend:** Streamlit
-- **Graph Visualization:** streamlit-agraph
-- **AI Agent:** OpenAI GPT-4o
-- **Graph Model:** NetworkX
+- **Frontend:** Streamlit with custom CSS styling
+- **Graph Visualization:** streamlit-agraph with physics-enabled layout
+- **AI Agent:** OpenAI GPT-4o or NVIDIA NIM (Llama 3.1 405B)
+- **Graph Model:** NetworkX for computation
+- **API Support:** OpenAI-compatible endpoints (OpenAI, NVIDIA NIM)
 
 ---
 

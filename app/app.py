@@ -3,6 +3,8 @@ Databricks Ontology Copilot
 
 A natural language interface for querying Databricks data ontologies
 using AI-powered graph traversal and visualization.
+
+Supports OpenAI GPT-4o and NVIDIA NIM API endpoints.
 """
 
 import streamlit as st
@@ -18,8 +20,110 @@ from streamlit_agraph import agraph, Node, Edge, Config
 st.set_page_config(
     page_title="Databricks Ontology Copilot",
     page_icon="📊",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
+
+# ============================================
+# CUSTOM CSS STYLING
+# ============================================
+
+st.markdown("""
+<style>
+    /* Main title styling */
+    .main h1 {
+        color: #FF3621;
+        font-weight: 700;
+        padding-bottom: 0.5rem;
+    }
+
+    /* Section headers */
+    .main h2 {
+        color: #1B3139;
+        font-weight: 600;
+        padding-top: 1rem;
+        border-bottom: 2px solid #FF3621;
+        padding-bottom: 0.5rem;
+    }
+
+    /* Metrics styling */
+    [data-testid="stMetricValue"] {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #1B3139;
+    }
+
+    /* Info boxes */
+    .stAlert {
+        border-radius: 8px;
+        border-left: 4px solid #FF3621;
+    }
+
+    /* Buttons */
+    .stButton>button {
+        border-radius: 6px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 54, 33, 0.3);
+    }
+
+    /* Code blocks */
+    .stCodeBlock {
+        border-radius: 8px;
+        border: 1px solid #E0E0E0;
+    }
+
+    /* Input fields */
+    .stTextInput>div>div>input {
+        border-radius: 6px;
+        border: 2px solid #E0E0E0;
+        font-size: 1rem;
+    }
+
+    .stTextInput>div>div>input:focus {
+        border-color: #FF3621;
+        box-shadow: 0 0 0 1px #FF3621;
+    }
+
+    /* Expanders */
+    .streamlit-expanderHeader {
+        background-color: #F8F9FA;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+
+    /* Success/Warning/Error boxes */
+    .stSuccess {
+        background-color: #D4EDDA;
+        border-color: #C3E6CB;
+        color: #155724;
+    }
+
+    .stWarning {
+        background-color: #FFF3CD;
+        border-color: #FFEAA7;
+        color: #856404;
+    }
+
+    .stError {
+        background-color: #F8D7DA;
+        border-color: #F5C6CB;
+        color: #721C24;
+    }
+
+    /* Footer styling */
+    .footer {
+        text-align: center;
+        padding: 1rem;
+        color: #6C757D;
+        font-size: 0.875rem;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # ============================================
 # SHARED: DATA LOADING
@@ -141,10 +245,43 @@ st.markdown("---")
 
 st.header("Ask the Ontology")
 
+# ============================================
+# API CONFIGURATION
+# ============================================
+
+def get_api_client():
+    """
+    Get API client (OpenAI or NVIDIA NIM)
+
+    Supports:
+    - OpenAI API: OPENAI_API_KEY
+    - NVIDIA NIM: NVIDIA_API_KEY (OpenAI-compatible format)
+
+    Returns:
+        tuple: (client, model_name, api_type)
+    """
+    # Check for NVIDIA NIM API key first
+    nvidia_key = os.getenv('NVIDIA_API_KEY')
+    if nvidia_key:
+        client = OpenAI(
+            api_key=nvidia_key,
+            base_url="https://integrate.api.nvidia.com/v1"
+        )
+        return client, "meta/llama-3.1-405b-instruct", "nvidia"
+
+    # Fall back to OpenAI
+    openai_key = os.getenv('OPENAI_API_KEY')
+    if openai_key:
+        client = OpenAI(api_key=openai_key)
+        return client, "gpt-4o", "openai"
+
+    return None, None, None
+
+
 # Helper function for the agent
 def query_ontology_agent(graph_json, user_question):
     """
-    Query the ontology using OpenAI GPT-4o
+    Query the ontology using LLM (OpenAI GPT-4o or NVIDIA NIM)
 
     Args:
         graph_json: The ontology graph as a dict
@@ -153,7 +290,10 @@ def query_ontology_agent(graph_json, user_question):
     Returns:
         dict: Structured recommendation with target, features, gaps
     """
-    client = OpenAI()
+    client, model_name, api_type = get_api_client()
+
+    if not client:
+        raise ValueError("No API key configured. Set OPENAI_API_KEY or NVIDIA_API_KEY")
 
     system_prompt = '''You are an ontology traversal agent. You have a knowledge graph of Databricks data assets as JSON. Answer the user's question by traversing the graph. Return ONLY valid JSON with this schema:
 {
@@ -163,32 +303,50 @@ def query_ontology_agent(graph_json, user_question):
 }
 Only recommend tables and columns that exist in the graph JSON. Never invent assets. If confidence is low, say so in gaps. Be concise but informative.'''
 
-    response = client.chat.completions.create(
-        model='gpt-4o',
-        messages=[
+    # Build API call parameters
+    call_params = {
+        'model': model_name,
+        'messages': [
             {'role': 'system', 'content': system_prompt},
             {'role': 'user', 'content': f'Graph: {json.dumps(graph_json)}\n\nQuestion: {user_question}'}
         ],
-        response_format={'type': 'json_object'},
-        temperature=0.0,  # Deterministic for demo consistency
-        max_tokens=1000
-    )
+        'temperature': 0.0,
+        'max_tokens': 1000
+    }
+
+    # Only OpenAI supports response_format parameter
+    if api_type == "openai":
+        call_params['response_format'] = {'type': 'json_object'}
+
+    response = client.chat.completions.create(**call_params)
 
     return json.loads(response.choices[0].message.content)
 
+
 # Check if API key is set
-api_key_set = bool(os.getenv('OPENAI_API_KEY'))
+api_key_set = bool(os.getenv('OPENAI_API_KEY') or os.getenv('NVIDIA_API_KEY'))
+api_provider = "NVIDIA NIM" if os.getenv('NVIDIA_API_KEY') else "OpenAI" if os.getenv('OPENAI_API_KEY') else None
 
 if not api_key_set:
     st.warning("""
-    Warning: **OpenAI API key not set**
+    Warning: **API key not set**
 
-    To use the agent, set your API key:
+    To use the agent, set one of the following:
+
+    **OpenAI:**
     ```bash
     export OPENAI_API_KEY='sk-...'
     ```
+
+    **NVIDIA NIM (OpenAI-compatible):**
+    ```bash
+    export NVIDIA_API_KEY='nvapi-...'
+    ```
+
     Then restart the Streamlit app.
     """)
+else:
+    st.info(f"Using **{api_provider}** API")
 
 # Demo mode (fallback for live demo if API fails)
 with st.expander("Demo Controls"):
@@ -388,4 +546,7 @@ with col_status3:
     else:
         st.info("Ready for query")
 
-st.caption("Built for Databricks Hackathon 2026 | Powered by OpenAI GPT-4o + Streamlit")
+st.markdown(
+    '<div class="footer">Built for Databricks Hackathon 2026 | Powered by LLMs + Streamlit + streamlit-agraph</div>',
+    unsafe_allow_html=True
+)
