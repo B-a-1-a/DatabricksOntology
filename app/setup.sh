@@ -3,28 +3,28 @@
 
 set -e
 
-echo "🚀 Setting up Databricks Ontology Copilot..."
+echo "[INFO] Setting up Databricks Ontology Copilot..."
 
 # Check if venv exists
 if [ ! -d "../venv" ]; then
-    echo "📦 Creating virtual environment..."
+    echo "[INFO] Creating virtual environment..."
     cd .. && python3 -m venv venv && cd app
 fi
 
 # Activate venv
-echo "🔧 Activating virtual environment..."
+echo "[INFO] Activating virtual environment..."
 source ../venv/bin/activate
 
 # Upgrade pip
-echo "⬆️  Upgrading pip..."
+echo "[INFO] Upgrading pip..."
 pip install --upgrade pip --quiet
 
 # Install dependencies
-echo "📚 Installing dependencies..."
+echo "[INFO] Installing dependencies..."
 pip install -r requirements.txt --quiet
 
 echo ""
-echo "✅ Setup complete!"
+echo "[SUCCESS] Setup complete!"
 echo ""
 echo "Next steps:"
 echo "  1. Set your OpenAI API key:"

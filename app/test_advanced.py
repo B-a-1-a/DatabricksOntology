@@ -416,9 +416,9 @@ def run_test_suite():
     print(f"Errors: {len(result.errors)}")
 
     if result.wasSuccessful():
-        print("\n✅ ALL TESTS PASSED")
+        print("\n[SUCCESS] ALL TESTS PASSED")
     else:
-        print("\n❌ SOME TESTS FAILED")
+        print("\n[FAIL] SOME TESTS FAILED")
 
     print("="*70)
 

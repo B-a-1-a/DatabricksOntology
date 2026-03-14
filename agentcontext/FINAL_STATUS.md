@@ -76,7 +76,7 @@ Total:              52/52 tests passing
 | Provider | Model | API Key | Features |
 |----------|-------|---------|----------|
 | OpenAI | gpt-4o | OPENAI_API_KEY | JSON mode, function calling |
-| NVIDIA NIM | llama-3.1-405b-instruct | NVIDIA_API_KEY | OpenAI-compatible |
+| NVIDIA NIM | nvidia/nemotron-3-super-120b-a12b | NVIDIA_API_KEY | OpenAI-compatible |
 
 **Implementation Highlights:**
 ```python
