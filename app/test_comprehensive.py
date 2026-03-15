@@ -11,6 +11,9 @@ import unittest
 from unittest.mock import Mock, patch, MagicMock
 from pathlib import Path
 
+DEFAULT_OPENAI_MODEL = "gpt-5-mini"
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL).strip() or DEFAULT_OPENAI_MODEL
+
 class TestGraphData(unittest.TestCase):
     """Test graph data loading and validation"""
 
@@ -226,7 +229,7 @@ class TestMockAPI(unittest.TestCase):
         from openai import OpenAI
         client = OpenAI()
         response = client.chat.completions.create(
-            model='gpt-4o',
+            model=OPENAI_MODEL,
             messages=[{'role': 'user', 'content': 'test'}],
             response_format={'type': 'json_object'}
         )

@@ -17,7 +17,7 @@
 | Graph visualization | streamlit-agraph | Native Streamlit, clickable nodes, no HTML hacks |
 | Graph visualization fallback | yfiles-graphs-for-streamlit | Drop-in if agraph looks rough |
 | Graph model | NetworkX | Backend computation, feeds directly into agraph |
-| LLM | OpenAI gpt-4o | $200 account, keys ready, json_object mode = no parse errors |
+| LLM | OpenAI gpt-5-mini | Efficient default for low-latency structured responses |
 | Databricks connectivity | databricks-sdk | Already installed and authenticated |
 
 ```bash
@@ -122,7 +122,7 @@ Using the Databricks SDK with profile 'Akshat Vasisht', do the following:
 4. Output as a flat JSON list saved to ontology_metadata.json
 
 Then make a single OpenAI API call with all that metadata as context.
-Use model gpt-4o with response_format={"type": "json_object"} to guarantee
+Use model gpt with response_format={"type": "json_object"} to guarantee
 valid JSON output. Instruct the model to output ONLY valid JSON matching this exact schema:
 {
   "nodes": [{"id": str, "type": str, "entity_key": str,
@@ -188,7 +188,7 @@ Below the graph, add a section titled "Ask the Ontology":
 2. st.button: "Find relevant data"
 3. On button click:
    - Load ontology_graph.json
-   - Call OpenAI API with model gpt-4o and response_format={"type": "json_object"}
+   - Call OpenAI API with model gpt-5-mini and response_format={"type": "json_object"}
      with this system prompt:
      "You are an ontology traversal agent. You have a knowledge graph of
       Databricks data assets as JSON. Answer the user's question by traversing
@@ -208,7 +208,7 @@ Below the graph, add a section titled "Ask the Ontology":
      st.dataframe for feature table recommendations
      st.warning for gaps if non-empty
 
-Use gpt-4o with response_format={"type": "json_object"} — this guarantees
+Use gpt-5-mini with response_format={"type": "json_object"} — this guarantees
 valid JSON output, no try/except needed around the parse.
 ```
 

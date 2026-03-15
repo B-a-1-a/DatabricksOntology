@@ -65,7 +65,7 @@ DatabricksOntology/
 
 ### Agent Query Interface
 - Natural language question input
-- OpenAI GPT-4o integration with structured JSON output
+- OpenAI `gpt-5-mini` integration with structured JSON output
 - Target column recommendations with reasoning
 - Feature table recommendations with confidence scores
 - Join key identification
@@ -86,10 +86,12 @@ DatabricksOntology/
 
 ```bash
 cd ~/DatabricksOntology/app
+uv venv ../venv
 source ../venv/bin/activate
 export OPENAI_API_KEY='sk-...'  # Optional - demo mode works without
-python test_integration.py       # Run tests
-streamlit run app.py             # Start application
+uv pip install -r requirements.txt
+uv run test_integration.py       # Run tests
+uv run streamlit run app.py      # Start application
 ```
 
 ## Test Results
@@ -119,7 +121,7 @@ Enable the "Demo Controls" section in the application to use cached responses wi
 ### Graph Data Updates
 Use the swap script to update graph data:
 ```bash
-python swap_graph_data.py <path_to_new_graph.json>
+uv run swap_graph_data.py <path_to_new_graph.json>
 ```
 
 This will:
@@ -155,7 +157,7 @@ This will:
 
 - **Frontend:** Streamlit
 - **Graph Visualization:** streamlit-agraph
-- **AI Agent:** OpenAI GPT-4o with JSON mode
+- **AI Agent:** OpenAI `gpt-5-mini` with JSON mode
 - **Graph Model:** NetworkX
 - **Data Source:** JSON file (swappable)
 

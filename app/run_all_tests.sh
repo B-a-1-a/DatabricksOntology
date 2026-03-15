@@ -6,17 +6,17 @@ echo ""
 
 echo "1. Integration Tests"
 echo "----------------------------------------------------------------------"
-python test_integration.py 2>&1 | grep -A 20 "TEST SUMMARY"
+uv run test_integration.py 2>&1 | grep -A 20 "TEST SUMMARY"
 echo ""
 
 echo "2. Comprehensive Tests"
 echo "----------------------------------------------------------------------"
-python test_comprehensive.py 2>&1 | grep -A 5 "TEST SUMMARY"
+uv run test_comprehensive.py 2>&1 | grep -A 5 "TEST SUMMARY"
 echo ""
 
 echo "3. Advanced Tests"
 echo "----------------------------------------------------------------------"
-python test_advanced.py 2>&1 | grep -A 5 "ADVANCED TEST SUITE SUMMARY"
+uv run test_advanced.py 2>&1 | grep -A 5 "ADVANCED TEST SUITE SUMMARY"
 echo ""
 
 echo "======================================================================"

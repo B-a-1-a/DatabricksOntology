@@ -6,6 +6,7 @@ A natural language interface for querying Databricks data ontologies using AI-po
 
 ### Prerequisites
 
+- `uv` installed
 - Python 3.8+
 - API key (OpenAI or NVIDIA NIM)
 - Virtual environment (recommended)
@@ -13,12 +14,15 @@ A natural language interface for querying Databricks data ontologies using AI-po
 ### Installation
 
 ```bash
+# Navigate to app directory
+cd app
+
 # Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+uv venv ../venv
+source ../venv/bin/activate  # On Windows: ..\venv\Scripts\activate
 
 # Install dependencies
-pip install streamlit streamlit-agraph networkx openai databricks-sdk
+uv pip install -r requirements.txt
 
 # Set API key (choose one)
 # Option 1: OpenAI
@@ -35,7 +39,7 @@ export NVIDIA_API_KEY='nvapi-...'
 cd app
 
 # Start Streamlit
-streamlit run app.py
+uv run streamlit run app.py
 ```
 
 The application will open in your browser at `http://localhost:8501`.
@@ -44,7 +48,7 @@ The application will open in your browser at `http://localhost:8501`.
 
 ### Agent Query Interface
 - Natural language question input for data discovery
-- AI-powered ontology traversal using LLMs (OpenAI GPT-4o or NVIDIA NIM Llama 3.1 405B)
+- AI-powered ontology traversal using LLMs (OpenAI `gpt-5-mini` by default or NVIDIA NIM Llama 3.1 405B)
 - Structured recommendations with target columns, feature tables, and join keys
 - Confidence scoring for recommendations
 - SQL scaffold generation
@@ -93,7 +97,7 @@ The application expects `ontology_graph.json` in the following format:
 
 ```bash
 # Test OpenAI API connection and agent logic
-python test_agent.py
+uv run test_agent.py
 ```
 
 This will verify:
@@ -121,19 +125,19 @@ export NVIDIA_API_KEY='nvapi-...'
 
 **Missing Dependencies:**
 ```bash
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 # Or install individually
-pip install streamlit openai
+uv pip install streamlit openai
 ```
 
 **Graph Data Not Found:**
 - Ensure `ontology_graph.json` exists in the app directory
-- Validate JSON syntax using `python -m json.tool ontology_graph.json`
+- Validate JSON syntax using `uv run python -m json.tool ontology_graph.json`
 
 ## Architecture
 
 - **Frontend:** Streamlit with custom CSS styling for professional appearance
-- **AI Agent:** Multi-provider support (OpenAI GPT-4o or NVIDIA NIM Llama 3.1 405B)
+- **AI Agent:** Multi-provider support (OpenAI `gpt-5-mini` by default or NVIDIA NIM Llama 3.1 405B)
 - **Graph Model:** NetworkX for backend computation
 - **Visualization:** streamlit-agraph with physics-enabled layout
 - **API Integration:** OpenAI-compatible endpoints with automatic provider detection
@@ -144,7 +148,7 @@ Key parameters in `app.py`:
 
 ```python
 # OpenAI
-model='gpt-4o'
+model=os.getenv('OPENAI_MODEL', 'gpt-5-mini')
 temperature=0.0             # Deterministic outputs
 response_format={'type': 'json_object'}  # Guaranteed valid JSON (OpenAI only)
 
@@ -158,7 +162,7 @@ temperature=0.0
 ### Supported Providers
 
 1. **OpenAI** (default)
-   - Model: `gpt-4o`
+   - Model: `gpt-5-mini` (override with `OPENAI_MODEL`)
    - API Key: `OPENAI_API_KEY`
    - Features: JSON mode, function calling
 

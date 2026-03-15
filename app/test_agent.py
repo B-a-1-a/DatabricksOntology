@@ -7,6 +7,9 @@ import json
 import os
 from openai import OpenAI
 
+DEFAULT_OPENAI_MODEL = "gpt-5-mini"
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL).strip() or DEFAULT_OPENAI_MODEL
+
 def test_api_connection():
     """Test basic OpenAI API connectivity"""
     print("Testing OpenAI API connection...")
@@ -23,7 +26,7 @@ def test_api_connection():
     try:
         client = OpenAI()
         response = client.chat.completions.create(
-            model='gpt-4o',
+            model=OPENAI_MODEL,
             messages=[{'role': 'user', 'content': 'Say hi in JSON format'}],
             response_format={'type': 'json_object'},
             max_tokens=50
@@ -55,7 +58,7 @@ def test_ontology_query():
     try:
         client = OpenAI()
         response = client.chat.completions.create(
-            model='gpt-4o',
+            model=OPENAI_MODEL,
             messages=[
                 {
                     'role': 'system',

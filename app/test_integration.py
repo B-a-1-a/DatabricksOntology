@@ -8,6 +8,9 @@ import os
 import sys
 from pathlib import Path
 
+DEFAULT_OPENAI_MODEL = "gpt-5-mini"
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL).strip() or DEFAULT_OPENAI_MODEL
+
 def test_graph_load():
     """Test graph data loads correctly"""
     print("Testing graph data load...")
@@ -97,7 +100,7 @@ def test_api_integration():
 
         client = OpenAI()
         response = client.chat.completions.create(
-            model='gpt-4o',
+            model=OPENAI_MODEL,
             messages=[
                 {'role': 'system', 'content': 'Return valid JSON with a "test" field set to true.'},
                 {'role': 'user', 'content': f'Graph has {len(graph["nodes"])} nodes'}
@@ -140,7 +143,7 @@ def test_agent_query():
 Only recommend tables and columns that exist in the graph.'''
 
         response = client.chat.completions.create(
-            model='gpt-4o',
+            model=OPENAI_MODEL,
             messages=[
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': f'Graph: {json.dumps(graph)}\n\nQuestion: What data should I use to predict target_outcome?'}
@@ -192,7 +195,7 @@ def test_no_hallucinations():
 CRITICAL: Only recommend tables and columns that exist in the graph JSON. Never invent assets.'''
 
         response = client.chat.completions.create(
-            model='gpt-4o',
+            model=OPENAI_MODEL,
             messages=[
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': f'Graph: {json.dumps(graph)}\n\nQuestion: What should I predict?'}

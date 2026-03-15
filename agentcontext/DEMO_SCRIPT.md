@@ -25,7 +25,7 @@
 
 > **"Every ML team spends their first week on a new project doing the same thing — reading schemas, tracing joins, figuring out which column is the target.**
 >
-> **We built a tool that does it in seconds. Our system ingests Databricks metadata and uses GPT-4o to build a semantic ontology automatically."**
+> **We built a tool that does it in seconds. Our system ingests Databricks metadata and uses gpt-5-mini to build a semantic ontology automatically."**
 
 *Hand off to P2*
 
@@ -81,7 +81,7 @@
 
 ✅ **Problem:** Schema discovery takes week one of every ML project
 ✅ **Solution:** Automated ontology extraction + AI agent
-✅ **Tech:** Databricks metadata + GPT-4o + graph reasoning
+✅ **Tech:** Databricks metadata + gpt-5-mini + graph reasoning
 ✅ **Benefit:** Grounded recommendations (no hallucination)
 ✅ **Demo:** Live query with visible graph traversal
 
@@ -121,7 +121,7 @@
 > "Great question - we focused on schema relationships for this hackathon, but lineage would be a natural extension using the same graph model."
 
 **Q: How do you prevent hallucinations?**
-> "We use GPT-4o's JSON mode for structured output and explicitly constrain the agent to only cite tables in the graph. The system prompt enforces this strictly."
+> "We use gpt-5-mini's JSON mode for structured output and explicitly constrain the agent to only cite tables in the graph. The system prompt enforces this strictly."
 
 **Q: Can it recommend multiple join paths?**
 > "Yes! The graph model supports it. We show the top recommendations ranked by confidence for the demo."

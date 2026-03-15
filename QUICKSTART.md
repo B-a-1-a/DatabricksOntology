@@ -6,21 +6,26 @@
 # 1. Navigate to project
 cd ~/DatabricksOntology/app
 
-# 2. Activate environment
+# 2. Create and activate environment
+uv venv ../venv
 source ../venv/bin/activate
 
-# 3. Set API key (optional - demo mode works without it)
+# 3. Install dependencies
+uv pip install -r requirements.txt
+
+# 4. Set API key (optional - demo mode works without it)
 # Option 1: OpenAI
 export OPENAI_API_KEY='sk-...'
+export OPENAI_MODEL='gpt-5-mini'  # Optional override; already the default
 
 # Option 2: NVIDIA NIM (OpenAI-compatible)
 export NVIDIA_API_KEY='nvapi-...'
 
-# 4. Test setup
-python test_integration.py
+# 5. Test setup
+uv run test_integration.py
 
-# 5. Run app
-streamlit run app.py
+# 6. Run app
+uv run streamlit run app.py
 ```
 
 App opens at: http://localhost:8501
@@ -63,8 +68,9 @@ app/
 
 **"Module not found"**
 ```bash
+uv venv ../venv
 source ../venv/bin/activate
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
 **"API key not set"**
@@ -86,7 +92,7 @@ export NVIDIA_API_KEY='nvapi-...'
 ls -la ontology_graph.json
 
 # Validate JSON
-python -m json.tool ontology_graph.json
+uv run python -m json.tool ontology_graph.json
 ```
 
 ## Demo Mode
@@ -103,17 +109,17 @@ Enable the "Demo Controls" section in the app to use cached responses without re
 
 ```bash
 # Run integration tests
-python test_integration.py
+uv run test_integration.py
 
 # Test API connectivity (requires API key)
-python test_agent.py
+uv run test_agent.py
 ```
 
 ## Architecture
 
 - **Frontend:** Streamlit with custom CSS styling
 - **Graph Visualization:** streamlit-agraph with physics-enabled layout
-- **AI Agent:** OpenAI GPT-4o or NVIDIA NIM (Llama 3.1 405B)
+- **AI Agent:** OpenAI `gpt-5-mini` by default or NVIDIA NIM (Llama 3.1 405B)
 - **Graph Model:** NetworkX for computation
 - **API Support:** OpenAI-compatible endpoints (OpenAI, NVIDIA NIM)
 
